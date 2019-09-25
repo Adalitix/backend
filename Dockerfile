@@ -20,8 +20,8 @@ ARG ENVIRONMENT=prod
 RUN git clone http://github.com/dwins/gsconfig.py.git/
 RUN cd gsconfig.py && sudo python setup.py install
 
-COPY config/requirements.txt /home/devel/adalitix/config/requirements.txt
-COPY config/requirements-${ENVIRONMENT}.txt /home/devel/adalitix/config/requirements-${ENVIRONMENT}.txt
+COPY requirements.txt /home/devel/adalitix/config/requirements.txt
+COPY requirements-${ENVIRONMENT}.txt /home/devel/adalitix/config/requirements-${ENVIRONMENT}.txt
 RUN sudo pip install -r config/requirements-${ENVIRONMENT}.txt
 
 # Layers for the django app
