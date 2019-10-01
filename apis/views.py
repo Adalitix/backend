@@ -8,6 +8,7 @@ from geoserver.catalog import Catalog
 from geoserver.support import build_url
 from django.core.serializers import serialize
 from django.forms.models import model_to_dict
+from proxy.views import proxy_view
 
 adalitix_catalog = Catalog("http://geoserver:8080/geoserver/rest/")
 
@@ -235,11 +236,15 @@ def files(request):
 def file_handler(request, id):
     if request.method == "POST":
         try:
-            # TODO: handle "other" type files
             data = request.FILES.get("data", None)
-            file_type = File.objects.get(id=id).file_type
+            file = File.objects.get(id=id)
+            file_type = file.file_type
 
-            put_layer(id, data, file_type)
+            if file_type == "other":
+                file.file = data
+                file.save()
+            else:
+                put_layer(id, data, file_type)
 
             return HttpResponse("Upload successful")
         except Exception as e:
@@ -250,7 +255,11 @@ def file_handler(request, id):
         file_type = f.file_type
         if (file_type == "other"):
             return FileResponse(f.file)
-        # TODO: handle "tiff" and "shp" type files
+        elif (file_type == "tiff"):
+            extra_requests_args = dict()
+            remoteurl = 'http://geoserver:8080' + \
+                "/geoserver/adalitix/ows?service=WCS&version=2.0.0&request=GetCoverage&coverageId=adalitix:" + id
+            return proxy_view(request, remoteurl, extra_requests_args)
     else:
         return HttpResponse("Method Not Allowed", status=405)
 
