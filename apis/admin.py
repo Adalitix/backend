@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Layer, File, Revision, Project
+from .models import Layer, File, Folder, Project
 
 
 class LayerAdmin(admin.ModelAdmin):
@@ -7,11 +7,12 @@ class LayerAdmin(admin.ModelAdmin):
 
 
 class FileAdmin(admin.ModelAdmin):
-    list_display = ("name", "revision", "id")
+    list_display = ("name", "folder", "id")
+    fields = ("name", "folder", "file", "file_type")
 
 
-class RevisionAdmin(admin.ModelAdmin):
-    list_display = ("name", "project", "tags", "id")
+class FolderAdmin(admin.ModelAdmin):
+    list_display = ("name", "parent", "project", "id")
 
 
 class ProjectAdmin(admin.ModelAdmin):
@@ -20,5 +21,5 @@ class ProjectAdmin(admin.ModelAdmin):
 
 admin.site.register(Layer, LayerAdmin)
 admin.site.register(File, FileAdmin)
-admin.site.register(Revision, RevisionAdmin)
+admin.site.register(Folder, FolderAdmin)
 admin.site.register(Project, ProjectAdmin)

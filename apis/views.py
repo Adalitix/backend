@@ -1,6 +1,6 @@
-from .models import Layer, File, Project, Revision
+from .models import Layer, File, Project, Folder
 from django.shortcuts import render, get_object_or_404
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, FileResponse
 import requests
 import json
 from django.views.decorators.csrf import csrf_exempt
@@ -203,18 +203,24 @@ def files(request):
     elif request.method == "POST":
         name = request.GET.get("name", "")
         source_type = request.GET.get("type", "")
-        revision = request.GET.get("revision", "")
-        if name == "" or source_type == "" or revision == "":
-            return HttpResponse("name, revision and type query parameter are required", status=400)
+        folder = request.GET.get("folder", "")
+        if name == "" or source_type == "" or folder == "":
+            return HttpResponse("name, folder and type query parameter are required", status=400)
 
         try:
             data = request.FILES.get("data", None)
-            new_file = File.objects.create(
-                name=name, revision=Revision.objects.get(id=revision), file_type=source_type)
 
-            put_layer(str(new_file.id), data, source_type)
+            if source_type == "other":
+                new_file = File.objects.create(
+                    name=name, folder=Folder.objects.get(id=folder), file_type=source_type, file=data)
+            else:
+                new_file = File.objects.create(
+                    name=name, folder=Folder.objects.get(id=folder), file_type=source_type)
+
+                put_layer(str(new_file.id), data, source_type)
 
             values = model_to_dict(new_file)
+            del values["file"]
             values["id"] = new_file.id
 
             return JsonResponse(values, safe=False)
@@ -229,6 +235,7 @@ def files(request):
 def file_handler(request, id):
     if request.method == "POST":
         try:
+            # TODO: handle "other" type files
             data = request.FILES.get("data", None)
             file_type = File.objects.get(id=id).file_type
 
@@ -238,6 +245,12 @@ def file_handler(request, id):
         except Exception as e:
             print(e)
             return HttpResponse("Upload failed", status=500)
+    elif request.method == "GET":
+        f = File.objects.get(id=id)
+        file_type = f.file_type
+        if (file_type == "other"):
+            return FileResponse(f.file)
+        # TODO: handle "tiff" and "shp" type files
     else:
         return HttpResponse("Method Not Allowed", status=405)
 
@@ -265,24 +278,28 @@ def project(request):
 
 
 @csrf_exempt
-def revision(request):
+def folder(request):
     if request.method == "GET":
-        revisions = list(Revision.objects.values())
-        data = {"results": revisions}
+        folders = list(Folder.objects.values())
+        data = {"results": folders}
 
         return JsonResponse(data, safe=False)
     elif request.method == "POST":
         name = request.GET.get("name", "")
-        tags = request.GET.get("tags", "")
         project = request.GET.get("project", "")
+        parent = request.GET.get("parent", None)
 
         if name == "" or project == "":
             return HttpResponse("Name and project parameters is required", status=400)
 
-        new_revision = Revision.objects.create(
-            name=name, tags=tags, project=Project.objects.get(id=project))
-        values = model_to_dict(new_revision)
-        values["id"] = new_revision.id
+        new_folder = Folder.objects.create(
+            name=name,
+            project=Project.objects.get(id=project),
+            parent=Folder.objects.get(
+                id=parent) if parent is not None else None
+        )
+        values = model_to_dict(new_folder)
+        values["id"] = new_folder.id
 
         return JsonResponse(values, safe=False)
     else:

@@ -13,7 +13,7 @@ urlpatterns = [
     path('clipper/predict/<str:model>',
          views.clipper_proxy, name='clipper_proxy'),
     path('projects', views.project, name="project"),
-    path('revisions', views.revision, name="revision"),
+    path('folders', views.folder, name="folder"),
     path('files', views.files, name="files"),
     path('files/<str:id>', views.file_handler, name="files"),
 ]
