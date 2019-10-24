@@ -23,7 +23,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '48jf^o^=4q4^-q92p$qljmxlty_+y8uj(z^cjsysclcb)f_kra'
 
 
-ALLOWED_HOSTS = ["adalitix.westeurope.cloudapp.azure.com", "localhost",
+ALLOWED_HOSTS = ["adalitix.westeurope.cloudapp.azure.com", "localhost", "13.80.249.224",
                  "backend"]
 
 
